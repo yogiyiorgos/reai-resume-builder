@@ -1,14 +1,18 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import axios from 'axios'
 import Loading from './Loading'
 
-const Home = () => {
+const Home = ({ setResult }) => {
   const [fullName, setFullName] = useState('')
   const [currentPosition, setCurrentPosition] = useState('')
-  const [currentLength, setCurrentLength] = useState('')
+  const [currentLength, setCurrentLength] = useState(1)
   const [currentTechnologies, setCurrentTechnologies] = useState('')
   const [avatar, setAvatar] = useState(null)
   const [loading, setLoading] = useState(false)
   const [companyInfo, setCompanyInfo] = useState([{ name: '', position: '' }])
+
+  const navigate = useNavigate()
 
   // Update the state with the user's info
   const handleAddCompany = () =>
@@ -40,13 +44,24 @@ const Home = () => {
   const handleFormSubmit = (e) => {
     e.preventDefault()
 
-    console.log({
-      fullName,
-      currentPosition,
-      currentLength,
-      currentTechnologies,
-      headshot,
-    })
+    const formData = new FormData()
+    formData.append('avatar', avatar, avatar.name)
+    formData.append('fullName', fullName)
+    formData.append('currentPosition', currentPosition)
+    formData.append('currentLength', currentLength)
+    formData.append('currentTechnologies', currentTechnologies)
+    formData.append('workHistory', JSON.stringify(companyInfo))
+    axios
+      // URL to send the request to, the formData to send, optional config object
+      .post('http://localhost:4000/resume/create', formData, {})
+      .then((res) => {
+        if (res.data.message) {
+          setResult(res.data.data)
+          navigate('/resume')
+        }
+      })
+      .catch((err) => console.log(err))
+
     setLoading(true)
   }
 
@@ -122,7 +137,7 @@ const Home = () => {
         {companyInfo.map((company, index) => (
           <div
             className='nestedContainer'
-            key='{index}'
+            key={index}
           >
             <div className='companies'>
               <label htmlFor='name'>Company Name</label>
